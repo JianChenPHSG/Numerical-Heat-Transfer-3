@@ -1,0 +1,52 @@
+program HW_2
+real L,rho,tao,n,u,i,phi_0,phi_L,F,D,V(5,6),R(5)
+L=1
+rho=1
+tao=0.1
+u=0.1
+phi_0=1
+phi_L=0
+n=5
+F=rho*u
+D=tao*n/L
+V=0
+!*****************************中心差分
+!V(1,1)=F/2+3*D
+!V(1,2)=F/2-D
+!V(1,6)=(F+2*D)*phi_0
+!do i=2,4
+!V(i,i-1)=F/2+D
+!V(i,i)=-2*D
+!V(i,i+1)=D-F/2
+!end do
+!V(5,4)=-F/2-D
+!V(5,5)=3*D-F/2
+!V(5,6)=(2*D-F)*phi_L
+!*****************************上风格式
+V(1,1)=F+3*D
+V(1,2)=-D
+V(1,6)=(F+2*D)*phi_0
+do i=2,4
+V(i,i-1)=F+D
+V(i,i)=-(F+2*D)
+V(i,i+1)=D
+end do
+V(5,4)=F+D
+V(5,5)=-(3*D+F)
+V(5,6)=-2*D*phi_L
+!*********************************
+do i=1,4
+V(i+1,:)=-V(i+1,i)/V(i,i)*V(i,:)+V(i+1,:)
+end do
+do i=1,4
+V(5-i,:)=-V(5-i,6-i)/V(6-i,6-i)*V(6-i,:)+V(5-i,:)
+end do
+do i=1,5
+V(i,6)=V(i,6)/V(i,i)!计算值
+end do
+do i=1,5
+R(i)=(exp(F*L*(i-0.5)/(n*tao))-1)/(exp(F*L/tao)-1)*(phi_L-phi_0)+phi_0 !理论值
+end do
+print*,V
+!print*,(R(i),i=1,5)
+end
