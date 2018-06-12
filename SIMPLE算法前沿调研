@@ -1,1 +1,43 @@
+SIMPLE算法前沿调研
+不可压缩的流体流动，如液体和低马赫数气体等，在生产和生活中广泛存在，例如热交换器设计，河流流动等。近年来，计算流体动力学（CFD）已成为研究流体力学的重要方法，数值模拟可以快速获得流体流动和传热特性，从而在实际工程中节省大量时间。由于缺乏一个压力演化微分方程，连续性方程反而变成了压力的约束，为了施加连续性约束，研究人员开发了不同的算法，包括投影法，SIMPLE算法，耦合法，浸没边界法，人工压缩法，涡度流函数等，此外，格子Boltzmann方法，基于动力学理论的介观方法，近年来也被用来模拟不可压缩的流体流动。其中，SIMPLE算法被广泛应用于稳定流，并且还扩展到非稳定流和高马赫数流问题。由于高精度和鲁棒性，SIMPLE算法甚至被用于解决包括燃烧，湍流等复杂问题。对SIMPLE算法进行优化，可以加快收敛速度，提高鲁棒性，因而具有重要意义。
+1972年，Spalding和Patankar[1]提出了用于热量，质量和动量传递的SIMPLE算法。使用SIMPLE算法，压力和速度解耦以便顺序求解。SIMPLE算法主要有两个假设：首先，初始压力和速度是独立给定的;其次是忽略邻点处的速度修正。在克服第一个假设方面，Patankar[2]在1980年提出了SIMPLER算法。初始压力是用一个额外的离散压力方程计算的，其中压力取决于之前的速度。然后，他在他的专著[3]中系统地阐述了SIMPLE算法。为了增强SIMPLE算法，一些研究人员专注于第二个假设。1984年，Raithby[4]引入了一致近似，并提供了SIMPLEC算法。1986年，Issa[5]提出了隐式离散化方程的算子分裂方法，称为PISO算法，在该算法中，邻点对速度修正的贡献被考虑进来了。2004年，陶文铨等人[6]开发了一个不使用压力修正方程的完全隐式算法，名为CLEAR。CLEAR算法丢弃第二个假设，以使收敛速度显着增加，然而，计算过程中的意外振荡会使鲁棒性恶化，因此，他们又开发了IDEAL[7]算法来提高鲁棒性。
+此外，近两年还有一些比较新的加速SIMPLE算法的方法，具体将在下文中加以介绍。
 
+1 SIMPLEPC算法
+Xiao Hui[8]等人在2018年通过改进SIMPLE算法提出了一种SIMPLEPC算法。在隐式求解离散动量方程后，采用额外的显式速度预测来消除先前隐式预测步骤中引入的迭代误差。对于一致近似，速度修正公式被修正，使修正后的速度和修正后的压力更好地满足没有松弛的动量方程和连续性方程。此外，Xiao Hui等人还将速度松弛因子a引入用于获得适当速度修正的速度修正公式中。在SIMPLEPC算法中，附加到SIMPLE的字母“P”和“C”分别表示额外预测和一致近似。
+数值实验表明，与SIMPLEC算法相比，SIMPLEPC总能以更少的时间和相似的鲁棒性收敛，如下表所示。当时间步长倍数（E）小于4（相应的速度松弛因子α小于0.8）时，时间消耗比（TCR）近似小于0.8。因此可以得到结论，SIMPLEPC的性能优于SIMPLEC，特别是低时间步长倍数。
+ 
+
+2 SIMPLERR算法
+Li Jie[9]等人在2016年提出了非结构网格上二维不可压缩流体流动的有效分离解法程序，新算法被称为SIMPLERR（SIMPLERR修正算法）。它包括一个由压力方程解和显式速度校正组成的内部迭代过程，然后通过对压力方程的另一个求解过程获得压力场。 SIMPLERR算法的特点和优势通过解决基准流问题来证明，结果表明SIMPLERR算法能够保持IDEAL算法的强大稳定性，并且能够比SIMPLER算法甚至比IDEAL算法更快地收敛。SIMPLERR算法的优点对于高Re数和精细网格流体流动情况尤其明显，其中SIMPLERR算法和IDEAL算法可以获得收敛结果，但SIMPLER算法不能，且SIMPLERR算法比IDEAL算法快两倍。SIMPLERR算法流程图如下图所示。
+ 
+
+3 机械能守恒方程法求解压力场
+当通过Navier-Stokes方程求解流体速度场和压力场时，通常使用由Patankar和Spalding开发的SIMPLE算法，但由于缺乏压力的独立偏微分方程，通常通过压力校正和迭代方法对Navier-Stokes方程进行数值求解。W.Liu[10]于2017年在构建流体动力通量与压力梯度之间的本构关系的基础上，建立流体流动的本构关系来描述流体做功的能力，然后，构造机械能守恒方程作为描述流体流动物理机制的控制方程，Navier-Stokes方程可以通过直接耦合他提出的守恒方程来求解流场中的速度和压力，分别是动量方程和机械能守恒方程，如下面的公式所示。
+ 
+ 
+结果表明，当将Navier-Stokes方程与所提出的流体力学能量守恒方程联系起来时，流体速度和压力可以通过数值方法求出。这也为分析运输现象提供了一直新的计算流体动力学方法。
+
+4 适用于高Re（大于10000）下的ISTEC-N算法
+SIMPLE算法已成功地用于解决Re <10000时的驱动腔问题。然而，由于其固有的缺点，SIMPLE系列算法在较高的Re（15,000-30,000）范围内无法实现收敛稳定的解决方案。Peng Ding[11]在2017年提出了一种新的分离求解器ISTEC-N（具有两个显式N个校正回路的不可压缩流动求解器），用于确定结构化并置网格系统上不可压缩流的解。从离散化的连续性方程推导压力方程，以克服SIMPLE算法的“半隐式”特性，引入显式速度更新循环来提高每次迭代中压力场与速度场之间的一致性，通过在高Re数（15000 <Re <30000）下解决驱动腔问题来评估ISTEC-N算法的性能，具体的算法流程图如下。
+ 
+结果表明，在这些高对流条件下，ISTEC-N算法表现出强大的鲁棒性特征，ISTEC-N算法给出的计算结果与基准数据非常吻合。
+
+5 改进的SIMPLE算法
+许多商业和非商业的CFD代码已经采用传统的压力速度耦合的SIMPLE算法，当它用于求解具有零等温可压缩性的不稳定自然对流时，会遇到收敛问题。Yutaka Asako[12]在2016年提出了一种改进的SIMPLE算法来弥补这一缺陷，通过修改前一时间步的值来更新每个时间步的密度以满足连续性方程。假设流体密度只是温度的函数，质量守恒并不满足，因此，新时间步的质量不等于旧时间步的质量，而通过改变旧时间步的密度以满足质量守恒，旧时间步的修正密度用于压力校正。
+ 
+用这种改进的SIMPLE算法计算等温垂直壁和绝热水平壁矩形腔内的不稳定自然对流，获得的计算结果与物理上是一致。
+
+参考文献
+[1] S.V. Patankar, D.B. Spalding, A calculation procedure for heat, mass and momentum transfer in three-dimensional parabolic flows, Int. J. Heat Mass Transf. 15 (10) (1972) 1787–1806.
+[2] S.V. Patankar, A calculation procedure for two-dimensional elliptic situations, Numer. Heat Transfer 4 (4) (1981) 409–425.
+[3] S.V. Patankar, Numerical HeatTransfer and Fluid Flow, Hemisphere, Washington D.C., 1980.
+[4] J.P. Van Doormaal, G.D. Raithby, Enhancements of the simple method for predicting incompressible fluid flows, Numer. Heat Transfer 7 (2) (1984) 147– 163.
+[5] R.I. Issa, Solution of the implicitly discretised fluid flow equations by operator splitting, J. Comput. Phys. 62 (1) (1986) 40–65.
+[6] W. Tao, Z. Qu, Y. He, A novel segregated algorithm for incompressible fluid flow and heat transfer problems—clear (coupled and linked equations algorithm revised). Part I: Mathematical formulation and solution procedure, Numer. Heat Transfer, Part B: Fundam. 45 (1) (2004) 1–17.
+[7] D. Sun, Z. Qu, Y. He, W. Tao, An efficient segregated algorithm for incompressible fluid flow and heat transfer problems—IDEAL (inner doubly iterative efficient algorithm for linked equations). Part I: Mathematical formulation and solution procedure, Numer. Heat Transfer, Part B: Fundam. 53 (1) (2008) 1–17.
+[8] H. Xiao, J. Wang, Z. Liu, W. Liu, A consistent SIMPLE algorithm with extra explicit prediction — SIMPLEPC, Int. J. Heat Mass Transf. 120 (2018) 1255–1265.
+[9] J. Li, Q. Zhang, Q. Zhai, An efficient SIMPLER-revised algorithm for incompressible flow with unstructured grids, Numer. Heat Transfer 71 (5) (2017) 425–442.
+[10] Liu W, Wang J B, Liu Z C. A method of fluid dynamic analysis based on Navier-Stokes equation and conservation equation on fluid mechanical energy[J]. International Journal of Heat & Mass Transfer, 2017, 109:393-396.
+[11] Peng D. Solution of lid-driven cavity problems with an improved SIMPLE algorithm at high Reynolds numbers[J]. International Journal of Heat & Mass Transfer, 2017, 115:942-954.
+[12] Asako Y, Faghri M. Modification of SIMPLE algorithm to handle natural convection flows with zero-isothermal compressibility[J]. International Journal of Heat & Mass Transfer, 2017, 106:177-182.
