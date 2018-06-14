@@ -51,7 +51,7 @@ C  Tsinghua University, Beijing 100084, China, March, 2013
 *--------------------------------------------------------------------------
       SUBROUTINE SOLVE
 ****************************************************************************
-	PARAMETER (NX=520,NY=56,NXY=520) !Ïà¹Ø²ÎÊýÒªÊÖ¶¯µ÷ÕûÓë×Ó³ÌÐòÒ»ÖÂ
+	PARAMETER (NX=520,NY=56,NXY=520) !ç›¸å…³å‚æ•°è¦æ‰‹åŠ¨è°ƒæ•´ä¸Žå­ç¨‹åºä¸€è‡´
       CHARACTER (LEN=20) TITLE
       LOGICAL LSOLVE,LPRINT,LBLK,LSTOP,LEND
       COMMON F(NX,NY,13),FOLD(NX,NY,13),P(NX,NY),RHO(NX,NY),GAM(NX,NY),
@@ -206,7 +206,7 @@ C  Tsinghua University, Beijing 100084, China, March, 2013
 ************************************************************************
       SUBROUTINE SETUP
 ************************************************************************
-	PARAMETER (NX=520,NY=56,NXY=520,NUM=16)!³ýÁËÍø¸ñ²ÎÊý£¬ÆäËûÐèÒªÓÃµ½µÄÈ«¾Ö±äÁ¿Ò²Òª¸³ÖµºÍÓÃ»§³ÌÐòÍ³Ò»
+	PARAMETER (NX=520,NY=56,NXY=520,NUM=16)!é™¤äº†ç½‘æ ¼å‚æ•°ï¼Œå…¶ä»–éœ€è¦ç”¨åˆ°çš„å…¨å±€å˜é‡ä¹Ÿè¦èµ‹å€¼å’Œç”¨æˆ·ç¨‹åºç»Ÿä¸€
       CHARACTER (LEN=20) TITLE
       LOGICAL LSOLVE,LPRINT,LBLK,LSTOP,LEND
       COMMON F(NX,NY,13),FOLD(NX,NY,13),P(NX,NY),RHO(NX,NY),GAM(NX,NY),
@@ -217,11 +217,11 @@ C  Tsinghua University, Beijing 100084, China, March, 2013
      &  R(NXY),RMN(NXY),SX(NXY),SXMN(NXY),XCVI(NXY),XCVIP(NXY)
       COMMON DU(NX,NY),DV(NX,NY),FV(NXY),FVP(NXY),
      &  FX(NXY),FXM(NXY),FY(NXY),FYM(NXY),PT(NXY),QT(NXY),
-     &  BL(NUM,NY),RB(NUM,NY) !ÓÃµ½ÁËÃÜ·â³Ý±ß½ç
+     &  BL(NUM,NY),RB(NUM,NY) !ç”¨åˆ°äº†å¯†å°é½¿è¾¹ç•Œ
       COMMON/INDX/NF,NFMAX,NP,NRHO,NGAM,L1,L2,L3,M1,M2,M3,
      &  IST,JST,ITER,LAST,TITLE(13),RELAX(13),TIME,DT,XL,YL,
      &  IPREF,JPREF,LSOLVE(10),LPRINT(13),LBLK(10),MODE,NTIMES(10),
-     &  RHOCON,SPACE !ÓÃµ½ÁËSPACE
+     &  RHOCON,SPACE !ç”¨åˆ°äº†SPACE
       COMMON ITIME     
       COMMON/CNTL/LSTOP,LEND
       COMMON/SORC/SMAX,SSUM,RSMAX
@@ -247,7 +247,7 @@ C  Tsinghua University, Beijing 100084, China, March, 2013
       DO 889 I=1,13
       LPRINT(I)=.FALSE.
  889  RELAX(I)=1.
-      MODE=1
+      MODE=2
       LAST=5
       TIME=0.
       ITER=0
@@ -419,10 +419,10 @@ C  Tsinghua University, Beijing 100084, China, March, 2013
       AP(I,J)=AP(I,J)-APT
       CON(I,J)=CON(I,J)+APT*FOLD(I,J,NF)
       
-      ! ¶ÔÓÚÃÜ·â³ÝÄÚ²¿µÄÏµÊýAPÈ¡ºÜ´ó£¬²»ÄÚ²¿ÇøÓòÈÃÆä²ÎÊý´«µÝ
-      AP(I,J)=(-AP(I,J)*VOL+AIP(I,J)+AIM(I,J)+AJP(I,J)+AJM(I,J)) !Ä¬ÈÏ
+      ! å¯¹äºŽå¯†å°é½¿å†…éƒ¨çš„ç³»æ•°APå–å¾ˆå¤§ï¼Œä¸å†…éƒ¨åŒºåŸŸè®©å…¶å‚æ•°ä¼ é€’
+      AP(I,J)=(-AP(I,J)*VOL+AIP(I,J)+AIM(I,J)+AJP(I,J)+AJM(I,J)) !é»˜è®¤
      &     /RELAX(NF)
-      DO K=1,NUM                              !ÃÜ·â³ÝÄÚ²»²ÎÓë´«µÝ
+      DO K=1,NUM                              !å¯†å°é½¿å†…ä¸å‚ä¸Žä¼ é€’
         IF(X(I)>=BL(K,J).AND.X(I)<RB(K,J).AND.R(J)<(R(1)+YL-SPACE))THEN
             AP(I,J)=1.E32
         END IF
@@ -497,7 +497,7 @@ C  Tsinghua University, Beijing 100084, China, March, 2013
       AP(I,J)=AP(I,J)-APT
       CON(I,J)=CON(I,J)+APT*FOLD(I,J,NF)
 
-      ! Í¬U
+      ! åŒU
       AP(I,J)=(-AP(I,J)*VOL+AIP(I,J)+AIM(I,J)+AJP(I,J)+AJM(I,J))
      &     /RELAX(NF)
       DO K=1,NUM                              
@@ -617,7 +617,7 @@ C  Tsinghua University, Beijing 100084, China, March, 2013
       AP(I,J)=AP(I,J)-APT
       CON(I,J)=CON(I,J)+APT*FOLD(I,J,NF)
       
-      ! Í¬U
+      ! åŒU
       AP(I,J)=(-AP(I,J)*VOL+AIP(I,J)+AIM(I,J)+AJP(I,J)+AJM(I,J))
      &     /RELAX(NF)
       DO K=1,NUM                              
@@ -638,7 +638,7 @@ C  Tsinghua University, Beijing 100084, China, March, 2013
 *-----------------------------------------------------------------------
       SUBROUTINE SUPPLY
 ************************************************************************
-	PARAMETER (NX=520,NY=56,NXY=520)!Ïà¹Ø²ÎÊýÒªÊÖ¶¯µ÷ÕûÓë×Ó³ÌÐòÒ»ÖÂ
+	PARAMETER (NX=520,NY=56,NXY=520)!ç›¸å…³å‚æ•°è¦æ‰‹åŠ¨è°ƒæ•´ä¸Žå­ç¨‹åºä¸€è‡´
       CHARACTER (LEN=20) TITLE
       LOGICAL LSOLVE,LPRINT,LBLK,LSTOP,LEND
       COMMON F(NX,NY,13),FOLD(NX,NY,13),P(NX,NY),RHO(NX,NY),GAM(NX,NY),
