@@ -13,7 +13,7 @@ C  (6) the time interval if any, and the other parameters for the
 C      iterations, i.e., the relaxation factors, the criteria for
 C      ending the internal/external iterations.
 ***********************************************************************
-      PARAMETER (NX=520,NY=56,NXY=520,NUM=16) !���ӻ��޸ĳ���NUM
+      PARAMETER (NX=520,NY=56,NXY=520,NUM=16) !添加或修改齿数NUM
       CHARACTER (LEN=20) TITLE
       LOGICAL LSOLVE,LPRINT,LBLK,LSTOP,LEND
       COMMON F(NX,NY,13),FOLD(NX,NY,13),P(NX,NY),RHO(NX,NY),GAM(NX,NY),
@@ -24,12 +24,12 @@ C      ending the internal/external iterations.
      & R(NXY),RMN(NXY),SX(NXY),SXMN(NXY),XCVI(NXY),XCVIP(NXY)
       COMMON DU(NX,NY),DV(NX,NY),FV(NXY),FVP(NXY),
      & FX(NXY),FXM(NXY),FY(NXY),FYM(NXY),PT(NXY),QT(NXY),
-     & BL(NUM,NY),RB(NUM,NY) !����ȫ�����飬�洢�ܷ�ݱ߽�λ��
+     & BL(NUM,NY),RB(NUM,NY) !添加全局数组，存储密封齿边界位置
       COMMON/INDX/NF,NFMAX,NP,NRHO,NGAM,L1,L2,L3,M1,M2,M3,
      &  IST,JST,ITER,LAST,TITLE(13),RELAX(13),TIME,DT,XL,YL,
      &  IPREF,JPREF,LSOLVE(10),LPRINT(13),LBLK(10),MODE,NTIMES(10),
-     &  RHOCON,SPACE,RATIO,SWIDTH, BWIDTH,THT !����,��϶,϶�ݱ�,����
-      REAL BRIDGEXL,BRIDGEXR !��ʱ����
+     &  RHOCON,SPACE,RATIO,SWIDTH, BWIDTH,THT !齿数,间隙,隙齿比,宽度
+      REAL BRIDGEXL,BRIDGEXR !临时变量
       COMMON/CNTL/LSTOP,LEND
       COMMON ITIME
       COMMON/SORC/SMAX,SSUM,RSMAX
@@ -46,16 +46,16 @@ C      ending the internal/external iterations.
 ***********************************************************************
       DIMENSION WR(NX,NY)
       EQUIVALENCE(F(1,1,4),WR(1,1))
-      DATA UIN,OMEGA/20.,300./ !��ֵ�����ʹ����NANԭ��δ֪
+      DATA UIN,OMEGA/20.,300./ !数值过大会使解变成NAN原因未知
       
       ENTRY GRID
         XL=75.E-3
         YL=5.4E-3
         L1=520
         M1=56
-        SPACE=1.0E-3 !��϶<YL
-        RATIO=2.     !��խͨ���ı�ֵ>1
-        THT=6.       !���γ���б�ǵ�����ֵ����Ҫȡ̫С>5�������ݻ�ܰ�
+        SPACE=1.0E-3 !间隙<YL
+        RATIO=2.     !宽窄通道的比值>1
+        THT=6.       !梯形齿倾斜角的正切值，不要取太小>5，那样齿会很矮
 	  CALL UGRID
       RETURN
 C----------------------------------------------------------------------
@@ -117,8 +117,8 @@ C----------------------------------------------------------------------
 
 	  DO J=1,M1
           IF(R(J) >= (R(1)+YL-SPACE)) THEN
-	      U(2,J)=UIN ! �ٶ����
-            U(L1,J)=U(L2,J) !�ٶȳ���
+	      U(2,J)=UIN ! 速度入口
+            U(L1,J)=U(L2,J) !速度出口
             V(1,J)=0.
             V(L1,J)=0.
             WR(1,J)=0.
@@ -144,10 +144,10 @@ C----------------------------------------------------------------------
        
         SWIDTH=XL/(RATIO*(NUM-1)+NUM)
         BWIDTH=RATIO*SWIDTH
-        DY=YL/FLOAT(M1-2) !Y��������߶�
-        DX=DY/THT ! ���γݵ�λ�߶�X����ƫ��
+        DY=YL/FLOAT(M1-2) !Y方向网格尺度
+        DX=DY/THT ! 梯形齿单位高度X方向偏移
 
-        ! ��֤��һ�ݺ�ĩβ����ֱ��
+        ! 保证第一齿和末尾齿是直尺
         BRIDGEXL=0
         DO K=1,NUM
           BRIDGEXR=BRIDGEXL+SWIDTH
@@ -158,7 +158,7 @@ C----------------------------------------------------------------------
           BRIDGEXL=BRIDGEXR+BWIDTH
         END DO
 
-        ! �м�ĳ������γݣ�����ֱ�ݣ�ȥ���˶Σ���ȫΪֱ��
+        ! 中间的齿是梯形齿，覆盖直齿，去掉此段，则全为直齿
         BRIDGEXL=SWIDTH+BWIDTH
         DO K=2,NUM-1
           BRIDGEXR=BRIDGEXL+SWIDTH
@@ -174,9 +174,9 @@ C----------------------------------------------------------------------
           BRIDGEXL=BRIDGEXR+BWIDTH
         END DO
 
-        ! �ܷ����ȫΪ�߽磬��������ת�ٶ�
+        ! 密封齿内全为边界，并设置旋转速度
         DO K=1,NUM
-        DO I=1,L1                              !������ٶ�Ϊ0
+        DO I=1,L1                              !轴封内速度为0
 	  DO J=1,M1
         IF(X(I)>=BL(K,J).AND.X(I)<RB(K,J).AND.R(J)<(R(1)+YL-SPACE))THEN
 	          U(I,J)=0.
@@ -190,20 +190,6 @@ C----------------------------------------------------------------------
       RETURN
 C----------------------------------------------------------------------
       ENTRY OUTPUT
-        IF(ITER.GE.2000) THEN
-        FLOWIN=0.
-        FLOWOUT=0.
-        DO J=1,6
-          FLOWIN=FLOWIN+U(2,J)*ARX(J)
-        END DO          
-        DO I=47,L1
-          FLOWOUT=FLOWOUT+V(I,M1)*XCV(I)*R(M1)
-        END DO
-        FACTOR=FLOWOUT/FLOWIN
-        DO I=47,L1
-          V(I,M1)=V(I,M1)/FACTOR
-        END DO
-        END IF
         
         IF(ITER.EQ.1) WRITE(8,400)
         IF(MOD(ITER,20).EQ.0) THEN
@@ -236,7 +222,7 @@ C----------------------------------------------------------------------
         END IF
     
          IF(LSTOP.OR.(ITER.EQ.LAST)) THEN  
-          OPEN(1,FILE='VELOCITY.dat')            !�ٶȴ�С
+          OPEN(1,FILE='VELOCITY.dat')            !速度大小
           WRITE(1,*) 'TITLE="VEL"'
           WRITE(1,*) 'VARIABLES="X","Y","U"'
           WRITE(1,*) 'ZONE I=',L1,',J=',M1
@@ -249,7 +235,7 @@ C----------------------------------------------------------------------
          END IF   
            
         IF(LSTOP.OR.(ITER.EQ.LAST)) THEN  
-          OPEN(1,FILE='PATHLINE.dat')            !�ٶȷ���
+          OPEN(1,FILE='PATHLINE.dat')            !速度分量
           WRITE(1,*) 'TITLE="VEL"'
           WRITE(1,*) 'VARIABLES="X","Y","U","V"'
           WRITE(1,*) 'ZONE I=',L1,',J=',M1
@@ -262,7 +248,7 @@ C----------------------------------------------------------------------
          END IF
 
         IF(LSTOP.OR.(ITER.EQ.LAST)) THEN 
-          OPEN(1,FILE='PRESSURE.dat')             !ѹ��
+          OPEN(1,FILE='PRESSURE.dat')             !压力
           WRITE(1,*) 'TITLE="P"'
           WRITE(1,*) 'VARIABLES="X","Y","P"'
           WRITE(1,*) 'ZONE I=',L1,',J=',M1
@@ -275,7 +261,7 @@ C----------------------------------------------------------------------
          END IF
 
          IF(LSTOP.OR.(ITER.EQ.LAST)) THEN 
-          OPEN(1,FILE='BLRB.dat')             !��λ��
+          OPEN(1,FILE='BLRB.dat')             !齿位置
           WRITE(1,*) 'TITLE="B"'
           WRITE(1,*) 'VARIABLES="X","Y","BL","RB"'
           WRITE(1,*) 'ZONE K=',NUM,',J=',M1
